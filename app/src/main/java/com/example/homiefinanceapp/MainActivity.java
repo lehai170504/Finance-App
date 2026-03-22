@@ -73,6 +73,10 @@ public class MainActivity extends AppCompatActivity {
         binding.btnAddTransaction.setOnClickListener(v -> {
             startActivity(new Intent(MainActivity.this, AddTransactionActivity.class));
         });
+
+        binding.btnManageCategory.setOnClickListener(v -> {
+            startActivity(new Intent(MainActivity.this, com.example.homiefinanceapp.activities.CategoryActivity.class));
+        });
     }
 
     private void updateUserHeader() {

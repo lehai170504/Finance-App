@@ -82,6 +82,15 @@ public interface ApiService {
     @DELETE("wallets/{id}")
     Call<ApiResponse<String>> deleteWallet(@Header("Authorization") String token, @Path("id") String id);
 
+    // Chuyển tiền giữa các ví
+    @POST("wallets/transfer")
+    Call<ApiResponse<String>> transferMoney(
+            @Header("Authorization") String token,
+            @Query("fromId") String fromId,
+            @Query("toId") String toId,
+            @Query("amount") Double amount
+    );
+
     @GET("categories")
     Call<ApiResponse<List<Category>>> getCategories(@Header("Authorization") String token);
 }
