@@ -8,6 +8,8 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.homiefinanceapp.activities.AddTransactionActivity;
+import com.example.homiefinanceapp.activities.CategoryActivity;
+import com.example.homiefinanceapp.activities.GroupActivity;
 import com.example.homiefinanceapp.activities.LoginActivity;
 import com.example.homiefinanceapp.activities.ProfileActivity;
 import com.example.homiefinanceapp.activities.WalletActivity; // 💡 Nhớ import cái này
@@ -65,18 +67,39 @@ public class MainActivity extends AppCompatActivity {
             startActivity(new Intent(MainActivity.this, ProfileActivity.class));
         });
 
-        binding.ivUserAvatar.setOnClickListener(v -> {
-            startActivity(new Intent(MainActivity.this, ProfileActivity.class));
-        });
-
-        // Sự kiện thêm giao dịch
+        // 1. FAB: Thêm giao dịch
         binding.btnAddTransaction.setOnClickListener(v -> {
-            startActivity(new Intent(MainActivity.this, AddTransactionActivity.class));
+            startActivity(new Intent(this, AddTransactionActivity.class));
         });
 
-        binding.btnManageCategory.setOnClickListener(v -> {
-            startActivity(new Intent(MainActivity.this, com.example.homiefinanceapp.activities.CategoryActivity.class));
+        // 2. Avatar: Click vào để sang Profile cho nhanh
+        binding.ivUserAvatar.setOnClickListener(v -> {
+            startActivity(new Intent(this, ProfileActivity.class));
         });
+
+        // 3. Bottom Navigation: Điều hướng
+        binding.bottomNav.setOnItemSelectedListener(item -> {
+            int id = item.getItemId();
+
+            if (id == R.id.nav_home) {
+                // Đang ở home rồi nên không làm gì hoặc refresh data
+                fetchUserInfo();
+                return true;
+            } else if (id == R.id.nav_category) {
+                startActivity(new Intent(this, CategoryActivity.class));
+                return true;
+            } else if (id == R.id.nav_group) {
+                startActivity(new Intent(this, GroupActivity.class));
+                return true;
+            } else if (id == R.id.nav_profile) {
+                startActivity(new Intent(this, ProfileActivity.class));
+                return true;
+            }
+            return false;
+        });
+
+        // Đặt mục mặc định là Home
+        binding.bottomNav.setSelectedItemId(R.id.nav_home);
     }
 
     private void updateUserHeader() {
@@ -91,7 +114,7 @@ public class MainActivity extends AppCompatActivity {
     // CÁC HÀM GỌI API
     // ==========================================================
 
-    // 1. Lấy Tên người dùng chuẩn xác từ Server (Tránh lộ Email)
+    // 1. Lấy Tên người dùng và ID chuẩn xác từ Server
     private void fetchUserInfo() {
         SharedPreferences prefs = getSharedPreferences("HomiePrefs", MODE_PRIVATE);
         String token = prefs.getString("token", "");
@@ -101,9 +124,17 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onResponse(Call<ApiResponse<UserResponse>> call, Response<ApiResponse<UserResponse>> response) {
                 if (response.isSuccessful() && response.body() != null) {
+                    // Lấy tên
                     String realUsername = response.body().getData().getUsername();
                     binding.tvWelcome.setText("Chào " + realUsername + "! 👋");
-                    prefs.edit().putString("user_name", realUsername).apply();
+
+                    // 💡 LẤY VÀ LƯU USER_ID VÀO BỘ NHỚ (Khúc này quan trọng nè)
+                    String realUserId = response.body().getData().getId();
+
+                    prefs.edit()
+                            .putString("user_name", realUsername)
+                            .putString("user_id", realUserId) // Lưu ID vào đây!
+                            .apply();
                 }
             }
 

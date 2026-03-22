@@ -51,6 +51,8 @@ public class ProfileActivity extends AppCompatActivity {
 
         // 4. Tự động Refresh Token khi vào Profile
         handleRefreshToken();
+
+        binding.btnBackProfile.setOnClickListener(v -> finish());
     }
 
     private void loadUserProfile() {

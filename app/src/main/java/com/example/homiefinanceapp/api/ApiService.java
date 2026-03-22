@@ -2,6 +2,8 @@ package com.example.homiefinanceapp.api;
 
 import com.example.homiefinanceapp.models.ApiResponse;
 import com.example.homiefinanceapp.models.Category;
+import com.example.homiefinanceapp.models.Group;
+import com.example.homiefinanceapp.models.GroupRequest;
 import com.example.homiefinanceapp.models.LoginRequest;
 import com.example.homiefinanceapp.models.LoginResponse;
 import com.example.homiefinanceapp.models.RegisterRequest;
@@ -93,4 +95,26 @@ public interface ApiService {
 
     @GET("categories")
     Call<ApiResponse<List<Category>>> getCategories(@Header("Authorization") String token);
+
+    @GET("groups/me")
+    Call<ApiResponse<List<Group>>> getMyGroups(@Header("Authorization") String token);
+
+    // 1. Tạo nhóm mới (Sử dụng API thật - image_7.png - nhận Query 'name')
+    @POST("groups/create")
+    Call<ApiResponse<Group>> createGroup(@Header("Authorization") String token, @Query("name") String name);
+
+    // 2. Rời khỏi nhóm
+    @POST("groups/{id}/leave")
+    Call<ApiResponse<String>> leaveGroup(@Header("Authorization") String token, @Path("id") String id);
+
+    // 3. Chỉnh sửa tên nhóm
+    @PUT("groups/{id}")
+    Call<ApiResponse<Group>> updateGroup(@Header("Authorization") String token, @Path("id") String id, @Body GroupRequest request);
+
+    // 4. Xóa nhóm hoàn toàn
+    @DELETE("groups/{id}")
+    Call<ApiResponse<String>> deleteGroup(@Header("Authorization") String token, @Path("id") String id);
+
+    @POST("groups/join")
+    Call<ApiResponse<Group>> joinGroup(@Header("Authorization") String token, @Query("inviteCode") String inviteCode);
 }
