@@ -170,4 +170,16 @@
         android:textSize="16sp"
         android:backgroundTint="@color/black"/>
 
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnManageCategory"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:text="Quản lý Danh mục"
+        android:layout_marginHorizontal="20dp"
+        android:layout_marginBottom="20dp"
+        app:cornerRadius="16dp"
+        android:textAllCaps="false"
+        android:textSize="16sp"
+        android:backgroundTint="#4CAF50"/>
+
 </LinearLayout>
