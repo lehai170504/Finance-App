@@ -1,17 +1,24 @@
 package com.example.homiefinanceapp.api;
 
 import com.example.homiefinanceapp.models.ApiResponse;
+import com.example.homiefinanceapp.models.Category;
 import com.example.homiefinanceapp.models.LoginRequest;
 import com.example.homiefinanceapp.models.LoginResponse;
 import com.example.homiefinanceapp.models.RegisterRequest;
 import com.example.homiefinanceapp.models.UserResponse;
+import com.example.homiefinanceapp.models.Wallet;
+import com.example.homiefinanceapp.models.WalletRequest;
+
+import java.util.List;
 
 import retrofit2.Call;
 import retrofit2.http.Body;
+import retrofit2.http.DELETE;
 import retrofit2.http.GET;
 import retrofit2.http.Header;
 import retrofit2.http.POST;
 import retrofit2.http.PUT;
+import retrofit2.http.Path;
 import retrofit2.http.Query;
 
 public interface ApiService {
@@ -55,4 +62,26 @@ public interface ApiService {
     Call<ApiResponse<LoginResponse>> refreshToken(
             @Header("Authorization") String token
     );
+
+    @GET("wallets")
+    Call<ApiResponse<List<Wallet>>> getWallets(@Header("Authorization") String token);
+
+    // Lấy tổng số dư các ví
+    @GET("wallets/total-balance")
+    Call<ApiResponse<Double>> getTotalBalance(@Header("Authorization") String token);
+
+    // Thêm ví mới
+    @POST("wallets")
+    Call<ApiResponse<Wallet>> createWallet(@Header("Authorization") String token, @Body WalletRequest request);
+
+    // Cập nhật ví (Đổi tên, màu, số dư)
+    @PUT("wallets/{id}")
+    Call<ApiResponse<Wallet>> updateWallet(@Header("Authorization") String token, @Path("id") String id, @Body WalletRequest request);
+
+    // Xóa ví
+    @DELETE("wallets/{id}")
+    Call<ApiResponse<String>> deleteWallet(@Header("Authorization") String token, @Path("id") String id);
+
+    @GET("categories")
+    Call<ApiResponse<List<Category>>> getCategories(@Header("Authorization") String token);
 }
