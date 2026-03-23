@@ -2,10 +2,12 @@
 <androidx.coordinatorlayout.widget.CoordinatorLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F4F7FA">
+    android:background="#F4F7FA"
+    tools:ignore="BottomAppBar,BottomNavigationSize,MissingScreenSizeSupport">
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
@@ -35,7 +37,7 @@
                     android:padding="2dp"
                     android:src="@mipmap/ic_launcher_round"
                     app:shapeAppearanceOverlay="@style/CircleImage"
-                    app:strokeColor="#DDDDDD"
+                    app:strokeColor="#757575"
                     app:strokeWidth="1dp" />
 
                 <LinearLayout
@@ -61,7 +63,7 @@
                         android:layout_height="wrap_content"
                         android:text="@string/sub_welcome"
                         android:textSize="12sp"
-                        android:textColor="#666666" />
+                        android:textColor="#444444" />
                 </LinearLayout>
             </RelativeLayout>
 
@@ -83,7 +85,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/total_balance"
-                        android:textColor="#E0E0E0"
+                        android:textColor="#FFFFFF"
                         android:textSize="14sp" />
 
                     <TextView
@@ -122,7 +124,7 @@
                             android:layout_height="wrap_content"
                             android:text="@string/income"
                             android:textSize="12sp"
-                            android:textColor="#4CAF50"/>
+                            android:textColor="#2E7D32"/>
                         <TextView
                             android:id="@+id/tvIncomeTotal"
                             android:layout_width="wrap_content"
@@ -149,7 +151,7 @@
                             android:layout_height="wrap_content"
                             android:text="@string/expense"
                             android:textSize="12sp"
-                            android:textColor="#F44336"/>
+                            android:textColor="#C62828"/>
                         <TextView
                             android:id="@+id/tvExpenseTotal"
                             android:layout_width="wrap_content"
@@ -199,6 +201,7 @@
         app:backgroundTint="@color/black"
         app:tint="@color/white"
         app:fabSize="normal"
-        android:contentDescription="@string/add_transaction" />
+        android:contentDescription="@string/add_transaction"
+        tools:ignore="TouchTargetSizeCheck" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
