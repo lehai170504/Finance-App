@@ -19,6 +19,20 @@ import java.util.List;
 public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.CategoryViewHolder> {
     private List<Category> categoryList = new ArrayList<>();
 
+    public interface OnCategoryClickListener {
+        void onCategoryClick(Category category);
+    }
+
+    private final OnCategoryClickListener clickListener;
+
+    public CategoryAdapter(OnCategoryClickListener clickListener) {
+        this.clickListener = clickListener;
+    }
+
+    public CategoryAdapter() {
+        this.clickListener = null;
+    }
+
     public void setCategories(List<Category> categories) {
         this.categoryList = categories;
         notifyDataSetChanged();
@@ -37,17 +51,37 @@ public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.Catego
         holder.tvCategoryName.setText(category.getName());
 
         // Load Icon
+        String iconName = category.getIcon();
+        if (iconName == null) iconName = "";
+        iconName = iconName.trim();
+        // Normalize nếu backend trả kèm đuôi hoặc path
+        if (iconName.endsWith(".png") || iconName.endsWith(".webp") || iconName.endsWith(".jpg") || iconName.endsWith(".jpeg")) {
+            iconName = iconName.substring(0, iconName.lastIndexOf('.'));
+        }
+        if (iconName.contains("/")) {
+            iconName = iconName.substring(iconName.lastIndexOf('/') + 1);
+        }
+
         int resId = holder.itemView.getContext().getResources()
-                .getIdentifier(category.getIcon(), "drawable", holder.itemView.getContext().getPackageName());
+                .getIdentifier(iconName, "drawable", holder.itemView.getContext().getPackageName());
+
         if (resId != 0) {
             holder.ivCategoryIcon.setImageResource(resId);
         } else {
-            holder.ivCategoryIcon.setImageResource(android.R.drawable.ic_menu_help);
+            // Fallback sang icon có sẵn để vẫn hiển thị "icon"
+            int fallbackRes = getFallbackAndroidIconRes(iconName);
+            if (fallbackRes != 0) {
+                holder.ivCategoryIcon.setImageResource(fallbackRes);
+            } else {
+                holder.ivCategoryIcon.setImageResource(android.R.drawable.ic_menu_help);
+            }
         }
 
-        // 💡 Chỉ click vào xem chơi thôi, không có sửa/xóa nữa
+        // Click thường: chỉ toast (để bạn phân biệt với long-press)
         holder.itemView.setOnClickListener(v -> {
-            Toast.makeText(v.getContext(), "Bạn chọn: " + category.getName(), Toast.LENGTH_SHORT).show();
+            if (clickListener != null) {
+                clickListener.onCategoryClick(category);
+            }
         });
     }
 
@@ -64,6 +98,31 @@ public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.Catego
             super(itemView);
             ivCategoryIcon = itemView.findViewById(R.id.ivCategoryIcon);
             tvCategoryName = itemView.findViewById(R.id.tvCategoryName);
+        }
+    }
+
+    private int getFallbackAndroidIconRes(String iconName) {
+        if (iconName == null || iconName.isEmpty()) return 0;
+        switch (iconName.toLowerCase()) {
+            case "ic_fastfood":
+                return android.R.drawable.ic_menu_crop;
+            case "ic_transport":
+                return android.R.drawable.ic_menu_compass;
+            case "ic_shopping":
+                return android.R.drawable.ic_menu_slideshow;
+            case "ic_health":
+                return android.R.drawable.ic_menu_edit;
+            case "ic_education":
+                return android.R.drawable.ic_menu_agenda;
+            case "ic_entertainment":
+                return android.R.drawable.ic_media_play;
+            case "ic_rent":
+                return android.R.drawable.ic_menu_myplaces;
+            case "ic_bills":
+                return android.R.drawable.ic_menu_manage;
+            case "ic_default":
+            default:
+                return android.R.drawable.ic_menu_help;
         }
     }
 }

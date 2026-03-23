@@ -12,6 +12,7 @@ import com.example.homiefinanceapp.activities.CategoryActivity;
 import com.example.homiefinanceapp.activities.GroupActivity;
 import com.example.homiefinanceapp.activities.LoginActivity;
 import com.example.homiefinanceapp.activities.ProfileActivity;
+import com.example.homiefinanceapp.activities.TrashTransactionsActivity;
 import com.example.homiefinanceapp.activities.WalletActivity; // 💡 Nhớ import cái này
 import com.example.homiefinanceapp.api.ApiService;
 import com.example.homiefinanceapp.api.RetrofitClient;
@@ -50,8 +51,13 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        if (binding != null && binding.bottomNav.getSelectedItemId() != R.id.nav_home) {
+            binding.bottomNav.setSelectedItemId(R.id.nav_home);
+        }
         fetchUserInfo();
         fetchTotalBalance();
+        fetchTotalIncome();
+        fetchTotalExpense();
     }
 
     private void setupDashboard() {
@@ -90,6 +96,9 @@ public class MainActivity extends AppCompatActivity {
                 return true;
             } else if (id == R.id.nav_group) {
                 startActivity(new Intent(this, GroupActivity.class));
+                return true;
+            } else if (id == R.id.nav_trash) {
+                startActivity(new Intent(this, TrashTransactionsActivity.class));
                 return true;
             } else if (id == R.id.nav_profile) {
                 startActivity(new Intent(this, ProfileActivity.class));
@@ -165,6 +174,54 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onFailure(Call<ApiResponse<Double>> call, Throwable t) {
                 binding.tvBalance.setText("Lỗi tải dữ liệu");
+            }
+        });
+    }
+
+    private void fetchTotalIncome() {
+        SharedPreferences prefs = getSharedPreferences("HomiePrefs", MODE_PRIVATE);
+        String token = prefs.getString("token", "");
+
+        ApiService apiService = RetrofitClient.getClient().create(ApiService.class);
+        apiService.getTotalIncome("Bearer " + token).enqueue(new Callback<ApiResponse<Double>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<Double>> call, Response<ApiResponse<Double>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    Double totalIncome = response.body().getData();
+                    if (totalIncome == null) totalIncome = 0.0;
+
+                    NumberFormat format = NumberFormat.getInstance(new Locale("vi", "VN"));
+                    binding.tvIncomeTotal.setText(format.format(totalIncome) + " đ");
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<Double>> call, Throwable t) {
+                binding.tvIncomeTotal.setText("Lỗi tải dữ liệu");
+            }
+        });
+    }
+
+    private void fetchTotalExpense() {
+        SharedPreferences prefs = getSharedPreferences("HomiePrefs", MODE_PRIVATE);
+        String token = prefs.getString("token", "");
+
+        ApiService apiService = RetrofitClient.getClient().create(ApiService.class);
+        apiService.getTotalExpense("Bearer " + token).enqueue(new Callback<ApiResponse<Double>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<Double>> call, Response<ApiResponse<Double>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    Double totalExpense = response.body().getData();
+                    if (totalExpense == null) totalExpense = 0.0;
+
+                    NumberFormat format = NumberFormat.getInstance(new Locale("vi", "VN"));
+                    binding.tvExpenseTotal.setText(format.format(totalExpense) + " đ");
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<Double>> call, Throwable t) {
+                binding.tvExpenseTotal.setText("Lỗi tải dữ liệu");
             }
         });
     }

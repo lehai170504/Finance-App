@@ -185,8 +185,8 @@
             app:elevation="0dp"
             app:menu="@menu/bottom_nav_menu"
             app:labelVisibilityMode="labeled"
-            app:itemIconTint="@color/black"
-            app:itemTextColor="@color/black" />
+            app:itemIconTint="@color/bottom_nav_item_color"
+            app:itemTextColor="@color/bottom_nav_item_color" />
 
     </com.google.android.material.bottomappbar.BottomAppBar>
 

@@ -1,17 +1,23 @@
 package com.example.homiefinanceapp.activities;
 
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
+import android.widget.GridLayout;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.Toast;
+import android.widget.TextView;
+import android.view.View;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
+
+import com.google.android.material.card.MaterialCardView;
 
 import com.example.homiefinanceapp.adapters.WalletAdapter;
 import com.example.homiefinanceapp.api.ApiService;
@@ -34,6 +40,91 @@ public class WalletActivity extends AppCompatActivity {
     private String token;
 
     private List<Wallet> currentWallets = new ArrayList<>();
+
+    // Bảng màu cố định để người dùng chọn (tránh nhập hex thủ công)
+    private final String[] WALLET_COLOR_PALETTE = new String[]{
+            "#AE2070", "#E91E63", "#9C27B0", "#3F51B5", "#2196F3",
+            "#009688", "#4CAF50", "#FF9800", "#F44336", "#795548"
+    };
+
+    private int dp(int value) {
+        return (int) (value * getResources().getDisplayMetrics().density);
+    }
+
+    private void updateColorStrokes(GridLayout grid, String selectedHex) {
+        for (int i = 0; i < grid.getChildCount(); i++) {
+            View child = grid.getChildAt(i);
+            if (!(child instanceof MaterialCardView)) continue;
+
+            MaterialCardView card = (MaterialCardView) child;
+            Object tag = card.getTag();
+            if (!(tag instanceof String)) continue;
+            String hex = (String) tag;
+
+            boolean isSelected = selectedHex != null && selectedHex.equalsIgnoreCase(hex);
+            card.setStrokeWidth(isSelected ? dp(2) : 0);
+            card.setStrokeColor(isSelected ? Color.BLACK : Color.TRANSPARENT);
+            card.setCardElevation(isSelected ? dp(2) : 0);
+        }
+    }
+
+    // Tạo view chọn màu (Grid ô màu)
+    private View buildWalletColorPicker(String initialHex, final String[] selectedColorHolder) {
+        LinearLayout wrapper = new LinearLayout(this);
+        wrapper.setOrientation(LinearLayout.VERTICAL);
+
+        TextView tvSelected = new TextView(this);
+        tvSelected.setTextSize(14f);
+        wrapper.addView(tvSelected);
+
+        GridLayout grid = new GridLayout(this);
+        grid.setColumnCount(5);
+        wrapper.addView(grid);
+
+        // Chuẩn hóa initialHex về palette (nếu không có trong palette thì dùng màu đầu tiên)
+        String normalized = WALLET_COLOR_PALETTE[0];
+        if (initialHex != null) {
+            for (String c : WALLET_COLOR_PALETTE) {
+                if (c.equalsIgnoreCase(initialHex)) {
+                    normalized = c;
+                    break;
+                }
+            }
+        }
+
+        selectedColorHolder[0] = normalized;
+        tvSelected.setText("Màu: " + normalized);
+
+        for (String hex : WALLET_COLOR_PALETTE) {
+            MaterialCardView card = new MaterialCardView(this);
+            card.setTag(hex);
+
+            card.setCardBackgroundColor(Color.parseColor(hex));
+            card.setRadius(dp(12));
+            card.setUseCompatPadding(false);
+
+            GridLayout.LayoutParams lp = new GridLayout.LayoutParams();
+            lp.width = dp(36);
+            lp.height = dp(36);
+            lp.setMargins(dp(4), dp(6), dp(4), dp(6));
+            card.setLayoutParams(lp);
+
+            // Stroke mặc định (cập nhật sau khi render xong)
+            card.setStrokeWidth(0);
+            card.setStrokeColor(Color.TRANSPARENT);
+
+            card.setOnClickListener(v -> {
+                selectedColorHolder[0] = hex;
+                tvSelected.setText("Màu: " + hex);
+                updateColorStrokes(grid, hex);
+            });
+
+            grid.addView(card);
+        }
+
+        updateColorStrokes(grid, selectedColorHolder[0]);
+        return wrapper;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -104,10 +195,8 @@ public class WalletActivity extends AppCompatActivity {
         etBalance.setInputType(android.text.InputType.TYPE_CLASS_NUMBER | android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL);
         layout.addView(etBalance);
 
-        EditText etColor = new EditText(this);
-        etColor.setHint("Mã màu Hex (Ví dụ: #E91E63)");
-        etColor.setText("#AE2070");
-        layout.addView(etColor);
+        final String[] selectedColor = new String[]{WALLET_COLOR_PALETTE[0]};
+        layout.addView(buildWalletColorPicker(WALLET_COLOR_PALETTE[0], selectedColor));
 
         new AlertDialog.Builder(this)
                 .setTitle("Thêm Ví Mới")
@@ -115,7 +204,7 @@ public class WalletActivity extends AppCompatActivity {
                 .setPositiveButton("Lưu", (dialog, which) -> {
                     String name = etName.getText().toString().trim();
                     String balanceStr = etBalance.getText().toString().trim();
-                    String color = etColor.getText().toString().trim();
+                    String color = selectedColor[0];
 
                     if (name.isEmpty() || balanceStr.isEmpty() || color.isEmpty()) {
                         Toast.makeText(this, "Vui lòng nhập đủ thông tin!", Toast.LENGTH_SHORT).show();
@@ -150,9 +239,8 @@ public class WalletActivity extends AppCompatActivity {
         etBalance.setInputType(android.text.InputType.TYPE_CLASS_NUMBER | android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL);
         layout.addView(etBalance);
 
-        EditText etColor = new EditText(this);
-        etColor.setText(wallet.getColor());
-        layout.addView(etColor);
+        final String[] selectedColor = new String[]{wallet.getColor()};
+        layout.addView(buildWalletColorPicker(wallet.getColor(), selectedColor));
 
         new AlertDialog.Builder(this)
                 .setTitle("Chỉnh sửa Ví")
@@ -160,7 +248,7 @@ public class WalletActivity extends AppCompatActivity {
                 .setPositiveButton("Cập nhật", (dialog, which) -> {
                     String name = etName.getText().toString().trim();
                     String balanceStr = etBalance.getText().toString().trim();
-                    String color = etColor.getText().toString().trim();
+                    String color = selectedColor[0];
 
                     if (name.isEmpty() || balanceStr.isEmpty() || color.isEmpty()) {
                         Toast.makeText(this, "Không được để trống nha homie!", Toast.LENGTH_SHORT).show();

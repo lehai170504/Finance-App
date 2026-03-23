@@ -60,7 +60,23 @@
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
         <activity
+            android:name=".activities.CategoryTransactionsActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
             android:name=".activities.GroupActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
+            android:name=".activities.GroupTransactionsActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
+            android:name=".activities.ReceiptPreviewActivity"
+            android:exported="false"
+            android:theme="@style/Theme.HomieFinanceApp" />
+        <activity
+            android:name=".activities.TrashTransactionsActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
 

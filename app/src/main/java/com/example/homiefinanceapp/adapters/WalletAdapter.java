@@ -5,6 +5,7 @@ import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -21,15 +22,13 @@ import java.util.Locale;
 
 public class WalletAdapter extends RecyclerView.Adapter<WalletAdapter.WalletViewHolder> {
     private List<Wallet> walletList = new ArrayList<>();
-    private final OnWalletClickListener listener; // 💡 1. Thêm cái Listener
+    private final OnWalletClickListener listener;
 
-    // 💡 2. Interface để giao tiếp với Activity
     public interface OnWalletClickListener {
         void onEditClick(Wallet wallet);
         void onDeleteClick(Wallet wallet);
     }
 
-    // Constructor yêu cầu phải truyền Listener vào
     public WalletAdapter(OnWalletClickListener listener) {
         this.listener = listener;
     }
@@ -55,22 +54,33 @@ public class WalletAdapter extends RecyclerView.Adapter<WalletAdapter.WalletView
         NumberFormat format = NumberFormat.getInstance(new Locale("vi", "VN"));
         holder.tvWalletBalance.setText(format.format(wallet.getBalance()) + " đ");
 
+        // Gán icon thông minh dựa trên tên ví
+        String nameLower = wallet.getName().toLowerCase();
+        if (nameLower.contains("momo")) {
+            holder.ivWalletIcon.setImageResource(android.R.drawable.ic_menu_save); // Có thể thay bằng icon MoMo thật sau này
+        } else if (nameLower.contains("tiền mặt") || nameLower.contains("cash")) {
+            holder.ivWalletIcon.setImageResource(android.R.drawable.ic_menu_view);
+        } else if (nameLower.contains("ngân hàng") || nameLower.contains("bank") || nameLower.contains("vcb") || nameLower.contains("bidv")) {
+            holder.ivWalletIcon.setImageResource(android.R.drawable.ic_menu_agenda);
+        } else {
+            holder.ivWalletIcon.setImageResource(android.R.drawable.ic_menu_myplaces);
+        }
+
         try {
             holder.layoutWalletBg.setBackgroundColor(Color.parseColor(wallet.getColor()));
         } catch (Exception e) {
             holder.layoutWalletBg.setBackgroundColor(Color.parseColor("#333333"));
         }
 
-        // 💡 3. Bắt sự kiện ẤN GIỮ (Long Click) vào cái ví
         holder.itemView.setOnLongClickListener(v -> {
             CharSequence[] options = new CharSequence[]{"✏️ Chỉnh sửa ví", "🗑 Xóa ví"};
             new AlertDialog.Builder(v.getContext())
                     .setTitle("Tùy chọn: " + wallet.getName())
                     .setItems(options, (dialog, which) -> {
                         if (which == 0) {
-                            listener.onEditClick(wallet); // Gọi hàm Sửa
+                            listener.onEditClick(wallet);
                         } else {
-                            listener.onDeleteClick(wallet); // Gọi hàm Xóa
+                            listener.onDeleteClick(wallet);
                         }
                     })
                     .show();
@@ -85,12 +95,14 @@ public class WalletAdapter extends RecyclerView.Adapter<WalletAdapter.WalletView
 
     static class WalletViewHolder extends RecyclerView.ViewHolder {
         TextView tvWalletName, tvWalletBalance;
+        ImageView ivWalletIcon;
         LinearLayout layoutWalletBg;
 
         public WalletViewHolder(@NonNull View itemView) {
             super(itemView);
             tvWalletName = itemView.findViewById(R.id.tvWalletName);
             tvWalletBalance = itemView.findViewById(R.id.tvWalletBalance);
+            ivWalletIcon = itemView.findViewById(R.id.ivWalletIcon);
             layoutWalletBg = itemView.findViewById(R.id.layoutWalletBg);
         }
     }

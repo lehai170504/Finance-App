@@ -5,7 +5,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -23,6 +22,7 @@ public class GroupAdapter extends RecyclerView.Adapter<GroupAdapter.GroupViewHol
 
     // 💡 Interface để giao tiếp với Activity
     public interface OnGroupInteractionListener {
+        void onOpenTransactionsClick(Group group);
         void onEditClick(Group group);
         void onDeleteClick(Group group);
         void onLeaveClick(Group group);
@@ -60,7 +60,9 @@ public class GroupAdapter extends RecyclerView.Adapter<GroupAdapter.GroupViewHol
         boolean isOwner = group.getOwner() != null && group.getOwner().getId().equals(currentUserId);
 
         holder.itemView.setOnClickListener(v -> {
-            Toast.makeText(v.getContext(), "Mở chi tiết nhóm: " + group.getName(), Toast.LENGTH_SHORT).show();
+            if (listener != null) {
+                listener.onOpenTransactionsClick(group);
+            }
         });
 
         // 💡 ẤN GIỮ VÀO ITEM ĐỂ HIỆN MENU TÙY CHỌN (Sửa/Xóa/Rời)
