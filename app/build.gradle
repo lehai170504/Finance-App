@@ -7,7 +7,9 @@ android {
     compileSdk 36
 
     Properties properties = new Properties()
-    properties.load(project.rootProject.file('local.properties').newDataInputStream())
+    if (project.rootProject.file('local.properties').exists()) {
+        properties.load(project.rootProject.file('local.properties').newDataInputStream())
+    }
 
     defaultConfig {
         applicationId "com.example.homiefinanceapp"
@@ -16,7 +18,9 @@ android {
         versionCode 1
         versionName "1.0"
 
-        buildConfigField "String", "BASE_URL", properties.getProperty('BASE_URL', "\"http://10.0.2.2:8080/api/\"")
+        // Đã sửa lại để luôn có dấu ngoặc kép String
+        def baseUrl = properties.getProperty('BASE_URL', 'https://homie-finance-api.onrender.com/api/')
+        buildConfigField "String", "BASE_URL", "\"${baseUrl.replace('"', '')}\""
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -28,7 +32,6 @@ android {
         }
     }
 
-    // --- CỨU TINH ĐÂY: ViewBinding phải nằm ở đây ---
     buildFeatures {
         buildConfig = true
         viewBinding = true
@@ -41,23 +44,19 @@ android {
 }
 
 dependencies {
-    // Các thư viện mặc định (dùng alias từ libs.versions.toml)
     implementation libs.appcompat
     implementation libs.material
     implementation libs.activity
     implementation libs.constraintlayout
 
-    // Retrofit & OkHttp (Call API cho Món 1, 2, 3)
     implementation 'com.squareup.retrofit2:retrofit:2.9.0'
     implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
     implementation 'com.squareup.okhttp3:logging-interceptor:4.9.0'
 
-    // Glide (Hiển thị ảnh hóa đơn Cloudinary)
     implementation 'com.github.bumptech.glide:glide:4.12.0'
     annotationProcessor 'com.github.bumptech.glide:compiler:4.12.0'
     implementation 'com.google.android.material:material:1.9.0'
 
-    // Testing
     testImplementation libs.junit
     androidTestImplementation libs.ext.junit
     androidTestImplementation libs.espresso.core
