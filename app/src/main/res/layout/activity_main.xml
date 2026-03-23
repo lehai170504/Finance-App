@@ -17,7 +17,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingTop="32dp"> <!-- Thêm paddingTop ở đây để đẩy toàn bộ content xuống -->
+            android:paddingTop="32dp">
 
             <RelativeLayout
                 android:layout_width="match_parent"
@@ -51,7 +51,7 @@
                         android:id="@+id/tvWelcome"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Chào homie! 👋"
+                        android:text="@string/welcome_msg"
                         android:textSize="20sp"
                         android:textStyle="bold"
                         android:textColor="#1A1A1A" />
@@ -59,7 +59,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Quản lý tài chính cá nhân"
+                        android:text="@string/sub_welcome"
                         android:textSize="12sp"
                         android:textColor="#666666" />
                 </LinearLayout>
@@ -82,7 +82,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Tổng số dư"
+                        android:text="@string/total_balance"
                         android:textColor="#E0E0E0"
                         android:textSize="14sp" />
 
@@ -90,7 +90,7 @@
                         android:id="@+id/tvBalance"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="loading..."
+                        android:text="@string/loading"
                         android:textColor="@color/white"
                         android:textSize="36sp"
                         android:textStyle="bold"
@@ -120,14 +120,14 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Thu nhập"
+                            android:text="@string/income"
                             android:textSize="12sp"
                             android:textColor="#4CAF50"/>
                         <TextView
                             android:id="@+id/tvIncomeTotal"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="0đ"
+                            android:text="@string/zero_vnd"
                             android:textStyle="bold"
                             android:textSize="16sp"/>
                     </LinearLayout>
@@ -147,14 +147,14 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Chi tiêu"
+                            android:text="@string/expense"
                             android:textSize="12sp"
                             android:textColor="#F44336"/>
                         <TextView
                             android:id="@+id/tvExpenseTotal"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="0đ"
+                            android:text="@string/zero_vnd"
                             android:textStyle="bold"
                             android:textSize="16sp"/>
                     </LinearLayout>
@@ -188,18 +188,17 @@
 
     </com.google.android.material.bottomappbar.BottomAppBar>
 
-    <!-- Đã tăng marginBottom lên 150dp để đẩy nút lên cao hơn nữa -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/btnAddTransaction"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
-        android:layout_marginBottom="150dp"
+        android:layout_marginBottom="140dp"
         android:layout_marginEnd="24dp"
         android:src="@android:drawable/ic_input_add"
         app:backgroundTint="@color/black"
         app:tint="@color/white"
         app:fabSize="normal"
-        android:contentDescription="Add Transaction" />
+        android:contentDescription="@string/add_transaction" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
