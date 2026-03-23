@@ -26,6 +26,9 @@ public class ForgotPasswordActivity extends AppCompatActivity {
         binding = ActivityForgotPasswordBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
+        // Nút Back quay lại Login
+        binding.btnBack.setOnClickListener(v -> finish());
+
         binding.btnSubmit.setOnClickListener(v -> {
             if (!isStep2) {
                 sendOtp();
