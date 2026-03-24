@@ -29,6 +29,7 @@ import com.example.homiefinanceapp.api.RetrofitClient;
 import com.example.homiefinanceapp.databinding.ActivityGroupTransactionsBinding;
 import com.example.homiefinanceapp.models.ApiResponse;
 import com.example.homiefinanceapp.models.Category;
+import com.example.homiefinanceapp.models.GroupStatsData;
 import com.example.homiefinanceapp.models.TransactionCreateRequest;
 import com.example.homiefinanceapp.models.TransactionListItem;
 import com.example.homiefinanceapp.models.TransactionsPageData;
@@ -39,7 +40,11 @@ import java.util.ArrayList;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.time.LocalDate;
+import java.text.NumberFormat;
+import java.util.Locale;
 import java.util.List;
+import java.util.Map;
 
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
@@ -118,7 +123,84 @@ public class GroupTransactionsActivity extends AppCompatActivity {
             @Override public void onTabReselected(TabLayout.Tab tab) {}
         });
 
+        LocalDate now = LocalDate.now();
+        binding.etStatsMonth.setText(String.valueOf(now.getMonthValue()));
+        binding.etStatsYear.setText(String.valueOf(now.getYear()));
+        binding.btnLoadStats.setOnClickListener(v -> loadGroupMonthlyStatsFromInput());
+        loadGroupMonthlyStats(now.getMonthValue(), now.getYear());
+
         fetchTransactionsByGroup(selectedGroupId);
+    }
+
+    private void loadGroupMonthlyStatsFromInput() {
+        String monthStr = binding.etStatsMonth.getText() != null ? binding.etStatsMonth.getText().toString().trim() : "";
+        String yearStr = binding.etStatsYear.getText() != null ? binding.etStatsYear.getText().toString().trim() : "";
+        if (monthStr.isEmpty() || yearStr.isEmpty()) {
+            Toast.makeText(this, "Nhập tháng và năm để xem thống kê!", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        try {
+            int month = Integer.parseInt(monthStr);
+            int year = Integer.parseInt(yearStr);
+            if (month < 1 || month > 12 || year < 2000 || year > 3000) {
+                Toast.makeText(this, "Tháng/năm không hợp lệ!", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            loadGroupMonthlyStats(month, year);
+        } catch (NumberFormatException e) {
+            Toast.makeText(this, "Tháng/năm không hợp lệ!", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void loadGroupMonthlyStats(int month, int year) {
+        if (token == null || token.trim().isEmpty()) return;
+        if (selectedGroupId == null || selectedGroupId.trim().isEmpty()) return;
+
+        ApiService apiService = RetrofitClient.getClient().create(ApiService.class);
+        apiService.getGroupMonthlyStats("Bearer " + token, selectedGroupId, month, year)
+                .enqueue(new Callback<ApiResponse<GroupStatsData>>() {
+                    @Override
+                    public void onResponse(Call<ApiResponse<GroupStatsData>> call, Response<ApiResponse<GroupStatsData>> response) {
+                        if (response.isSuccessful() && response.body() != null && response.body().getData() != null) {
+                            bindGroupStats(response.body().getData());
+                        } else {
+                            Toast.makeText(
+                                    GroupTransactionsActivity.this,
+                                    resolveBeMessage(response, "Không lấy được thống kê nhóm!"),
+                                    Toast.LENGTH_SHORT
+                            ).show();
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<ApiResponse<GroupStatsData>> call, Throwable t) {
+                        Log.e("API_ERROR", "loadGroupMonthlyStats: " + t.getMessage(), t);
+                        Toast.makeText(GroupTransactionsActivity.this, "Lỗi kết nối Server!", Toast.LENGTH_SHORT).show();
+                    }
+                });
+    }
+
+    private void bindGroupStats(GroupStatsData stats) {
+        NumberFormat format = NumberFormat.getInstance(new Locale("vi", "VN"));
+        double totalExpense = stats.getTotalExpense() != null ? stats.getTotalExpense() : 0d;
+        binding.tvStatsTotalExpense.setText("Tổng chi tiêu: " + format.format(totalExpense) + " đ");
+
+        binding.tvStatsByCategory.setText("Theo danh mục:\n" + mapToMultiline(stats.getStatsByCategory()));
+        binding.tvStatsByUser.setText("Theo thành viên:\n" + mapToMultiline(stats.getStatsByUser()));
+    }
+
+    private String mapToMultiline(Map<String, Double> map) {
+        if (map == null || map.isEmpty()) return "--";
+        NumberFormat format = NumberFormat.getInstance(new Locale("vi", "VN"));
+        StringBuilder sb = new StringBuilder();
+        for (Map.Entry<String, Double> entry : map.entrySet()) {
+            if (entry == null) continue;
+            String key = entry.getKey() != null ? entry.getKey() : "Không rõ";
+            double value = entry.getValue() != null ? entry.getValue() : 0d;
+            if (sb.length() > 0) sb.append("\n");
+            sb.append("• ").append(key).append(": ").append(format.format(value)).append(" đ");
+        }
+        return sb.length() == 0 ? "--" : sb.toString();
     }
 
     private void showReceiptActionDialog(TransactionListItem item) {

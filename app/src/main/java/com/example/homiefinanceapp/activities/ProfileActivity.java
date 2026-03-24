@@ -2,7 +2,12 @@ package com.example.homiefinanceapp.activities;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.ContentValues;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -21,6 +26,18 @@ import com.example.homiefinanceapp.models.ApiResponse;
 import com.example.homiefinanceapp.models.LoginResponse;
 import com.example.homiefinanceapp.models.UserResponse;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -46,10 +63,13 @@ public class ProfileActivity extends AppCompatActivity {
         // 2. Sự kiện đổi mật khẩu
         binding.btnChangePass.setOnClickListener(v -> showChangePassDialog());
 
-        // 3. Sự kiện đăng xuất
+        // 3. Sự kiện xuất file excel
+        binding.btnExportExcel.setOnClickListener(v -> handleExportExcel());
+
+        // 4. Sự kiện đăng xuất
         binding.btnLogoutProfile.setOnClickListener(v -> handleLogout());
 
-        // 4. Tự động Refresh Token khi vào Profile
+        // 5. Tự động Refresh Token khi vào Profile
         handleRefreshToken();
 
         binding.btnBackProfile.setOnClickListener(v -> finish());
@@ -166,6 +186,144 @@ public class ProfileActivity extends AppCompatActivity {
             }
             @Override public void onFailure(Call<ApiResponse<UserResponse>> call, Throwable t) {}
         });
+    }
+
+    private void handleExportExcel() {
+        ApiService apiService = RetrofitClient.getClient().create(ApiService.class);
+        apiService.downloadExcelReport("Bearer " + token).enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                if (!response.isSuccessful() || response.body() == null) {
+                    Toast.makeText(ProfileActivity.this, "Tải file thất bại!", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                String contentType = response.headers().get("Content-Type");
+                if (contentType != null) {
+                    String normalized = contentType.toLowerCase(Locale.ROOT);
+                    boolean looksLikeExcel = normalized.contains("sheet")
+                            || normalized.contains("excel")
+                            || normalized.contains("octet-stream");
+                    if (!looksLikeExcel) {
+                        String rawBody = "";
+                        try {
+                            rawBody = response.body().string();
+                        } catch (Exception ignored) {
+                        }
+                        Toast.makeText(
+                                ProfileActivity.this,
+                                "Server không trả file Excel hợp lệ!",
+                                Toast.LENGTH_LONG
+                        ).show();
+                        Log.e("PROFILE_EXPORT", "Unexpected content type: " + contentType + " body: " + rawBody);
+                        return;
+                    }
+                }
+
+                String fileName = resolveExcelFileName(response);
+                boolean saved = writeResponseBodyToPublicDownloads(response.body(), fileName);
+                if (saved) {
+                    Toast.makeText(ProfileActivity.this, "Đã tải file vào Download: " + fileName, Toast.LENGTH_LONG).show();
+                } else {
+                    Toast.makeText(ProfileActivity.this, "Lưu file thất bại!", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+                Toast.makeText(ProfileActivity.this, "Không thể tải file: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private boolean writeResponseBodyToPublicDownloads(ResponseBody body, String fileName) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            ContentValues values = new ContentValues();
+            values.put(MediaStore.Downloads.DISPLAY_NAME, fileName);
+            values.put(MediaStore.Downloads.MIME_TYPE, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            values.put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS);
+            values.put(MediaStore.Downloads.IS_PENDING, 1);
+
+            Uri uri = getContentResolver().insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values);
+            if (uri == null) {
+                return false;
+            }
+
+            try (InputStream inputStream = body.byteStream();
+                 OutputStream outputStream = getContentResolver().openOutputStream(uri)) {
+                if (outputStream == null) {
+                    return false;
+                }
+                byte[] firstBytes = new byte[2];
+                int firstRead = inputStream.read(firstBytes);
+                if (firstRead < 2 || firstBytes[0] != 'P' || firstBytes[1] != 'K') {
+                    Log.e("PROFILE_EXPORT", "Downloaded file is not valid XLSX (missing PK header)");
+                    return false;
+                }
+                outputStream.write(firstBytes, 0, 2);
+                byte[] buffer = new byte[4096];
+                int bytesRead;
+                while ((bytesRead = inputStream.read(buffer)) != -1) {
+                    outputStream.write(buffer, 0, bytesRead);
+                }
+                outputStream.flush();
+
+                ContentValues doneValues = new ContentValues();
+                doneValues.put(MediaStore.Downloads.IS_PENDING, 0);
+                getContentResolver().update(uri, doneValues, null, null);
+                return true;
+            } catch (IOException e) {
+                Log.e("PROFILE_EXPORT", "Write download file error: " + e.getMessage(), e);
+                getContentResolver().delete(uri, null, null);
+                return false;
+            }
+        }
+
+        File downloadDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+        if (downloadDir == null || (!downloadDir.exists() && !downloadDir.mkdirs())) {
+            return false;
+        }
+        File outputFile = new File(downloadDir, fileName);
+        try (InputStream inputStream = body.byteStream();
+             FileOutputStream outputStream = new FileOutputStream(outputFile)) {
+            byte[] firstBytes = new byte[2];
+            int firstRead = inputStream.read(firstBytes);
+            if (firstRead < 2 || firstBytes[0] != 'P' || firstBytes[1] != 'K') {
+                Log.e("PROFILE_EXPORT", "Downloaded file is not valid XLSX (missing PK header)");
+                return false;
+            }
+            outputStream.write(firstBytes, 0, 2);
+            byte[] buffer = new byte[4096];
+            int bytesRead;
+            while ((bytesRead = inputStream.read(buffer)) != -1) {
+                outputStream.write(buffer, 0, bytesRead);
+            }
+            outputStream.flush();
+            return true;
+        } catch (IOException e) {
+            Log.e("PROFILE_EXPORT", "Write legacy download file error: " + e.getMessage(), e);
+            return false;
+        }
+    }
+
+    private String resolveExcelFileName(Response<ResponseBody> response) {
+        String contentDisposition = response.headers().get("Content-Disposition");
+        if (contentDisposition != null) {
+            Matcher matcher = Pattern.compile("filename\\*=UTF-8''([^;]+)|filename=\"?([^\";]+)\"?", Pattern.CASE_INSENSITIVE)
+                    .matcher(contentDisposition);
+            if (matcher.find()) {
+                String fileName = matcher.group(1) != null ? matcher.group(1) : matcher.group(2);
+                if (fileName != null && !fileName.trim().isEmpty()) {
+                    fileName = fileName.trim().replace("\"", "");
+                    if (!fileName.toLowerCase(Locale.ROOT).endsWith(".xlsx")) {
+                        fileName = fileName + ".xlsx";
+                    }
+                    return fileName;
+                }
+            }
+        }
+        String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
+        return "homie_report_" + timestamp + ".xlsx";
     }
 
     private void handleLogout() {

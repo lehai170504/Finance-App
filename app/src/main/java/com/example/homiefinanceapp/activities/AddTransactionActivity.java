@@ -264,9 +264,7 @@ public class AddTransactionActivity extends AppCompatActivity {
                         @Override
                         public void onResponse(retrofit2.Call<ApiResponse<TransactionCreateResponse>> call, retrofit2.Response<ApiResponse<TransactionCreateResponse>> response) {
                             if (response.isSuccessful() && response.body() != null && response.body().getData() != null) {
-                                TransactionCreateResponse data = response.body().getData();
-                                String id = data.getId() != null ? data.getId() : "";
-                                Toast.makeText(AddTransactionActivity.this, "Đã tạo giao dịch thành công! ID: " + id, Toast.LENGTH_LONG).show();
+                                Toast.makeText(AddTransactionActivity.this, "Đã tạo giao dịch thành công!", Toast.LENGTH_LONG).show();
                                 finish();
                             } else {
                                 String toastMsg = "Tạo giao dịch thất bại!";

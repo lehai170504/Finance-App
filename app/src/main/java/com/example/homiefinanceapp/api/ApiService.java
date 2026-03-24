@@ -1,8 +1,10 @@
 package com.example.homiefinanceapp.api;
 
 import com.example.homiefinanceapp.models.ApiResponse;
+import com.example.homiefinanceapp.models.CategoryReportItem;
 import com.example.homiefinanceapp.models.Category;
 import com.example.homiefinanceapp.models.Group;
+import com.example.homiefinanceapp.models.GroupStatsData;
 import com.example.homiefinanceapp.models.GroupRequest;
 import com.example.homiefinanceapp.models.LoginRequest;
 import com.example.homiefinanceapp.models.LoginResponse;
@@ -18,6 +20,7 @@ import com.example.homiefinanceapp.models.TransactionsPageData;
 import java.util.List;
 
 import okhttp3.MultipartBody;
+import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.DELETE;
@@ -29,6 +32,7 @@ import retrofit2.http.Part;
 import retrofit2.http.PUT;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
+import retrofit2.http.Streaming;
 
 public interface ApiService {
     @POST("auth/login")
@@ -84,6 +88,17 @@ public interface ApiService {
 
     @GET("transactions/total-expense")
     Call<ApiResponse<Double>> getTotalExpense(@Header("Authorization") String token);
+
+    @GET("reports/categories")
+    Call<ApiResponse<List<CategoryReportItem>>> getCategoryReport(
+            @Header("Authorization") String token,
+            @Query("startDate") String startDate,
+            @Query("endDate") String endDate
+    );
+
+    @Streaming
+    @GET("reports/download-excel")
+    Call<ResponseBody> downloadExcelReport(@Header("Authorization") String token);
 
     // Thêm ví mới
     @POST("wallets")
@@ -185,6 +200,14 @@ public interface ApiService {
 
     @GET("groups/me")
     Call<ApiResponse<List<Group>>> getMyGroups(@Header("Authorization") String token);
+
+    @GET("groups/details/{groupId}/stats")
+    Call<ApiResponse<GroupStatsData>> getGroupMonthlyStats(
+            @Header("Authorization") String token,
+            @Path("groupId") String groupId,
+            @Query("month") int month,
+            @Query("year") int year
+    );
 
     // 1. Tạo nhóm mới (Sử dụng API thật - image_7.png - nhận Query 'name')
     @POST("groups/create")
