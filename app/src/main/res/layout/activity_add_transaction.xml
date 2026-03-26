@@ -140,6 +140,46 @@
                     app:tint="#CCCCCC"/>
             </LinearLayout>
 
+            <LinearLayout
+                android:id="@+id/layoutSelectGroup"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:background="?attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true">
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:src="@android:drawable/ic_menu_share"
+                    app:tint="#666666" />
+                <TextView
+                    android:id="@+id/tvSelectedGroup"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="16dp"
+                    android:text="Chọn nhóm (optional)"
+                    android:textSize="16sp"
+                    android:textColor="#666666"/>
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@android:drawable/ic_media_next"
+                    app:tint="#CCCCCC"/>
+            </LinearLayout>
+
+            <EditText
+                android:id="@+id/etDate"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="yyyy-MM-dd"
+                android:inputType="text"
+                android:backgroundTint="#CCCCCC"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="24dp"/>
+
             <EditText
                 android:id="@+id/etNote"
                 android:layout_width="match_parent"

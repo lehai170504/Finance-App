@@ -1,3 +1,11 @@
 <resources>
     <string name="app_name">HomieFinanceApp</string>
+    <string name="welcome_msg">Chào homie! 👋</string>
+    <string name="sub_welcome">Quản lý tài chính cá nhân</string>
+    <string name="total_balance">Tổng số dư</string>
+    <string name="loading">loading&#8230;</string>
+    <string name="income">Thu nhập</string>
+    <string name="expense">Chi tiêu</string>
+    <string name="zero_vnd">0đ</string>
+    <string name="add_transaction">Thêm giao dịch</string>
 </resources>

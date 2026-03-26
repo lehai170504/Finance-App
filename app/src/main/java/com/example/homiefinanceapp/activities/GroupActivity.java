@@ -1,6 +1,7 @@
 package com.example.homiefinanceapp.activities;
 
 import android.content.SharedPreferences;
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.EditText;
@@ -60,6 +61,16 @@ public class GroupActivity extends AppCompatActivity {
     private void setupRecyclerView() {
         // 💡 Cập nhật Constructor Adapter và implement Interface listener
         groupAdapter = new GroupAdapter(currentUserId, new GroupAdapter.OnGroupInteractionListener() {
+            @Override
+            public void onOpenTransactionsClick(Group group) {
+                if (group == null || group.getId() == null || group.getId().trim().isEmpty()) {
+                    Toast.makeText(GroupActivity.this, "Thiếu groupId!", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                Intent intent = GroupTransactionsActivity.newIntent(GroupActivity.this, group.getId(), group.getName());
+                startActivity(intent);
+            }
+
             @Override
             public void onEditClick(Group group) {
                 // Trưởng nhóm bấm Sửa -> Mở Dialog
@@ -186,22 +197,33 @@ public class GroupActivity extends AppCompatActivity {
     }
 
     private void updateGroupApi(String groupId, String name) {
-        GroupRequest request = new GroupRequest(name);
         ApiService apiService = RetrofitClient.getClient().create(ApiService.class);
-        apiService.updateGroup("Bearer " + token, groupId, request).enqueue(new Callback<ApiResponse<Group>>() {
+        apiService.updateGroup("Bearer " + token, groupId, name).enqueue(new Callback<ApiResponse<Group>>() {
             @Override
             public void onResponse(Call<ApiResponse<Group>> call, Response<ApiResponse<Group>> response) {
                 if (response.isSuccessful()) {
                     Toast.makeText(GroupActivity.this, "Cập nhật thành công!", Toast.LENGTH_SHORT).show();
                     fetchMyGroups(); // Load lại
                 } else {
-                    Toast.makeText(GroupActivity.this, "Không thể cập nhật! Lỗi API giả định!", Toast.LENGTH_SHORT).show();
+                    String errBody = null;
+                    try {
+                        if (response.errorBody() != null) {
+                            errBody = response.errorBody().string();
+                        }
+                    } catch (Exception ignored) {}
+                    Log.e("API_ERROR_UPDATE_GROUP", "HTTP " + response.code() + ", error=" + errBody);
+                    Toast.makeText(
+                            GroupActivity.this,
+                            "Cập nhật thất bại! HTTP " + response.code(),
+                            Toast.LENGTH_SHORT
+                    ).show();
                 }
             }
 
             @Override
             public void onFailure(Call<ApiResponse<Group>> call, Throwable t) {
-                Toast.makeText(GroupActivity.this, "Lỗi kết nối API giả định!", Toast.LENGTH_SHORT).show();
+                Log.e("API_ERROR_UPDATE_GROUP", "onFailure: " + t.getMessage(), t);
+                Toast.makeText(GroupActivity.this, "Lỗi kết nối server!", Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -215,13 +237,21 @@ public class GroupActivity extends AppCompatActivity {
                     Toast.makeText(GroupActivity.this, "Đã xóa nhóm!", Toast.LENGTH_SHORT).show();
                     fetchMyGroups(); // Load lại
                 } else {
-                    Toast.makeText(GroupActivity.this, "Lỗi xóa nhóm giả định!", Toast.LENGTH_SHORT).show();
+                    String errBody = null;
+                    try {
+                        if (response.errorBody() != null) {
+                            errBody = response.errorBody().string();
+                        }
+                    } catch (Exception ignored) {}
+                    Log.e("API_ERROR_DELETE_GROUP", "HTTP " + response.code() + ", error=" + errBody);
+                    Toast.makeText(GroupActivity.this, "Xóa thất bại! HTTP " + response.code(), Toast.LENGTH_SHORT).show();
                 }
             }
 
             @Override
             public void onFailure(Call<ApiResponse<String>> call, Throwable t) {
-                Toast.makeText(GroupActivity.this, "Lỗi kết nối API giả định!", Toast.LENGTH_SHORT).show();
+                Log.e("API_ERROR_DELETE_GROUP", "onFailure: " + t.getMessage(), t);
+                Toast.makeText(GroupActivity.this, "Lỗi kết nối server!", Toast.LENGTH_SHORT).show();
             }
         });
     }
